@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+console.log("connected to")
 const {Schema} = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
-mongoose.connect("mongodb+srv://sankalppradhan1906:6a1knfMr6xBTQLNN<@cluster0.ked4nml.mongodb.net/Skillshare")
 
 
 const userSchema = new  Schema({
@@ -31,10 +31,10 @@ const purchaseSchema = new  Schema({
     courseId : ObjectId
 })
 
-const userModel = moongoose.model("user", userSchema);
-const adminModel = moongoose.model("user", adminSchema);
-const courseModel = moongoose.model("user", courseSchema);
-const purchaseModel = moongoose.model("user", purchaseSchema);
+const userModel = mongoose.model("user", userSchema);
+const adminModel = mongoose.model("admin", adminSchema);
+const courseModel = mongoose.model("course", courseSchema);
+const purchaseModel = mongoose.model("purchase", purchaseSchema);
 
 
 module.exports = {
