@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
-console.log("connected to")
+console.log("connected to db file")
 const {Schema} = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 
 
 const userSchema = new  Schema({
     email : {type : String, unique : true},
-    password : String,
-    firstName : String,
-    LastName : String, 
+    password : {type : String, required : true},
+    firstName : {type : String, required : true},
+    LastName : {type : String, required : true} ,
 });
 
 const adminSchema = new Schema({
