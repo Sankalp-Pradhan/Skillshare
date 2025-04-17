@@ -1,38 +1,117 @@
-const {Router} = require("express");
+//imported librarires
+const bcrypt = require("bcrypt");
+const { Router } = require("express");
+const { z } = require("zod");
+const jwt = require("jsonwebtoken");
+require('dotenv').config();
+
+//requiring routers
 const adminRouter = Router();
-const {adminModel, userModel} = require("../db")
+const { adminModel, userModel } = require("../db")
 
 // adminRouter.use(adminMiddleware)({
 
 // })
 
-adminRouter.post("/signup", function (req, res) {
-    
-})
-
-adminRouter.post("/signin", function (req, res) {
-    res.json({
-        message : 'USER'
+adminRouter.post("/signup",async function (req, res) {
+    //zod validation
+    const StringField = z.string().min(3).max(100);
+    const requireBody = z.object({
+        email: StringField.email(),
+        password: StringField,
+        firstName: StringField,
+        LastName: StringField
     })
+
+    const parseDataWithSuccess = requireBody.safeParse(req.body);
+    if (!parseDataWithSuccess.success) {
+        res.json({
+            message: "wrong input",
+            error: parseDataWithSuccess.error
+        })
+        return
+    }
+
+    //adding bcrypt lib hash the password
+    const { email, password, firstName, LastName } = parseDataWithSuccess.data;
+    const hashedPassword = await bcrypt.hash(password, 5);
+    console.log("code reached hashedPassword of user.js");
+
+    const existingUser = await userModel.findOne({ email: email });
+    if (existingUser) {
+        return res.status(409).json({
+            message: "user already exist"
+        })
+    }
+    //harkirat told to put this is in try catch
+    try {
+        await adminModel.create({
+            email: email,
+            password: hashedPassword,
+            firstName: firstName,
+            LastName: LastName
+        })
+        res.json({
+            message: "Signup Succeded"
+        })
+
+    } catch (error) {
+        console.log("error during singup", error);
+        return
+    }
 })
 
+
+adminRouter.post("/signin", async function (req, res) {
+    const { email, password } = req.body;
+
+
+    const admin = await adminModel.findOne({//findone retuns either user or undefined
+        //i was using find before but it returns a document and find returns an array hope my future julie would get it easily.
+        email: email,
+    })
+
+    if (!admin) {
+        res.status(403).json({
+            message: "admin does not exist"
+        })
+        return
+    }
+    // password is hashed stored so we cant store directy
+    const passowrdMatch = await  bcrypt.compare(password, admin.password);
+
+    //using bcrypt library to match the hashedpassword 
+    if (passowrdMatch) {
+        const token = jwt.sign({
+            id: admin._id
+        }, process.env.JWT_admin_SECRET)
+
+        res.json({
+            token: token
+        })
+    } else {
+        res.status(403).json({
+            message: "incorrect credentials"
+        })
+    }
+})
 adminRouter.post("/courses", function (req, res) {
     res.json({
-        message : 'USER'
+        message: 'ad'
     })
 })
 
 adminRouter.put("/courses", function (req, res) {
     res.json({
-        message : 'USER'
+        message: 'USER'
     })
 })
 adminRouter.get("/bulk", function (req, res) {
     res.json({
-        message : 'USER'
+        message: 'USER'
     })
 })
 
 module.exports = {
-    adminRouter : adminRouter
+    adminRouter: adminRouter
 }
