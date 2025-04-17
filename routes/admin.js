@@ -4,16 +4,18 @@ const { Router } = require("express");
 const { z } = require("zod");
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
+const { adminMiddleware } = require("../middlewares/admin")
 
 //requiring routers
 const adminRouter = Router();
-const { adminModel, userModel } = require("../db")
+const { adminModel, userModel, courseModel } = require("../db");
+const course = require("./course");
 
 // adminRouter.use(adminMiddleware)({
 
 // })
 
-adminRouter.post("/signup",async function (req, res) {
+adminRouter.post("/signup", async function (req, res) {
     //zod validation
     const StringField = z.string().min(3).max(100);
     const requireBody = z.object({
@@ -35,7 +37,7 @@ adminRouter.post("/signup",async function (req, res) {
     //adding bcrypt lib hash the password
     const { email, password, firstName, LastName } = parseDataWithSuccess.data;
     const hashedPassword = await bcrypt.hash(password, 5);
-    console.log("code reached hashedPassword of user.js");
+    console.log("code reached hashedPassword of admin.js");
 
     const existingUser = await userModel.findOne({ email: email });
     if (existingUser) {
@@ -61,7 +63,6 @@ adminRouter.post("/signup",async function (req, res) {
     }
 })
 
-
 adminRouter.post("/signin", async function (req, res) {
     const { email, password } = req.body;
 
@@ -78,7 +79,7 @@ adminRouter.post("/signin", async function (req, res) {
         return
     }
     // password is hashed stored so we cant store directy
-    const passowrdMatch = await  bcrypt.compare(password, admin.password);
+    const passowrdMatch = await bcrypt.compare(password, admin.password);
 
     //using bcrypt library to match the hashedpassword 
     if (passowrdMatch) {
@@ -95,13 +96,26 @@ adminRouter.post("/signin", async function (req, res) {
         })
     }
 })
-adminRouter.post("/courses", function (req, res) {
-    res.json({
-        message: 'ad'
+
+adminRouter.post("/courses", adminMiddleware, function (req, res) {
+    const adminId = req.adminId;
+    const { title, description, imageUrl, price } = req.body;
+
+    courseModel.create({
+        title: title,
+        description: description,
+        imageUrl: imageUrl,
+        price: price,
+        creatorId : adminId 
     })
+    res.json({
+        message : "course is created",
+        courseId : course._id
+    })
+
 })
 
-adminRouter.put("/courses", function (req, res) {
+adminRouter.put("/courses" ,adminMiddleware, function (req, res) {
     res.json({
         message: 'USER'
     })
